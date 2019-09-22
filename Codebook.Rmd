@@ -1,0 +1,73 @@
+# Codebook
+
+### Features in the Dataset
+[1] "tBodyAccMeanX"                "tBodyAccMeanY"                "tBodyAccMeanZ"               
+ [4] "tBodyAccStdX"                 "tBodyAccStdY"                 "tBodyAccStdZ"                
+ [7] "tGravityAccMeanX"             "tGravityAccMeanY"             "tGravityAccMeanZ"            
+[10] "tGravityAccStdX"              "tGravityAccStdY"              "tGravityAccStdZ"             
+[13] "tBodyAccJerkMeanX"            "tBodyAccJerkMeanY"            "tBodyAccJerkMeanZ"           
+[16] "tBodyAccJerkStdX"             "tBodyAccJerkStdY"             "tBodyAccJerkStdZ"            
+[19] "tBodyGyroMeanX"               "tBodyGyroMeanY"               "tBodyGyroMeanZ"              
+[22] "tBodyGyroStdX"                "tBodyGyroStdY"                "tBodyGyroStdZ"               
+[25] "tBodyGyroJerkMeanX"           "tBodyGyroJerkMeanY"           "tBodyGyroJerkMeanZ"          
+[28] "tBodyGyroJerkStdX"            "tBodyGyroJerkStdY"            "tBodyGyroJerkStdZ"           
+[31] "tBodyAccMagMean"              "tBodyAccMagStd"               "tGravityAccMagMean"          
+[34] "tGravityAccMagStd"            "tBodyAccJerkMagMean"          "tBodyAccJerkMagStd"          
+[37] "tBodyGyroMagMean"             "tBodyGyroMagStd"              "tBodyGyroJerkMagMean"        
+[40] "tBodyGyroJerkMagStd"          "fBodyAccMeanX"                "fBodyAccMeanY"               
+[43] "fBodyAccMeanZ"                "fBodyAccStdX"                 "fBodyAccStdY"                
+[46] "fBodyAccStdZ"                 "fBodyAccMeanFreqX"            "fBodyAccMeanFreqY"           
+[49] "fBodyAccMeanFreqZ"            "fBodyAccJerkMeanX"            "fBodyAccJerkMeanY"           
+[52] "fBodyAccJerkMeanZ"            "fBodyAccJerkStdX"             "fBodyAccJerkStdY"            
+[55] "fBodyAccJerkStdZ"             "fBodyAccJerkMeanFreqX"        "fBodyAccJerkMeanFreqY"       
+[58] "fBodyAccJerkMeanFreqZ"        "fBodyGyroMeanX"               "fBodyGyroMeanY"              
+[61] "fBodyGyroMeanZ"               "fBodyGyroStdX"                "fBodyGyroStdY"               
+[64] "fBodyGyroStdZ"                "fBodyGyroMeanFreqX"           "fBodyGyroMeanFreqY"          
+[67] "fBodyGyroMeanFreqZ"           "fBodyAccMagMean"              "fBodyAccMagStd"              
+[70] "fBodyAccMagMeanFreq"          "fBodyBodyAccJerkMagMean"      "fBodyBodyAccJerkMagStd"      
+[73] "fBodyBodyAccJerkMagMeanFreq"  "fBodyBodyGyroMagMean"         "fBodyBodyGyroMagStd"         
+[76] "fBodyBodyGyroMagMeanFreq"     "fBodyBodyGyroJerkMagMean"     "fBodyBodyGyroJerkMagStd"     
+[79] "fBodyBodyGyroJerkMagMeanFreq"
+
+
+### Summary Results
+```{r echo=FALSE, results='asis'}
+library(knitr)
+if (!file.exists("./data/getdata.zip")){
+fileurl<-"https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileurl,"./data/getdata.zip",method="curl")
+}
+if (!file.exists("./data/UCI HAR Dataset")) { 
+  unzip("./data/getdata.zip",exdir="./data") 
+}
+activity <- read.table("./data/UCI HAR Dataset/activity_labels.txt",stringsAsFactors = FALSE)
+features <- read.table("./data/UCI HAR Dataset/features.txt",stringsAsFactors = FALSE)
+
+meanstd <- grep(".*mean.*|.*std.*", features[,2])
+meanstd.names <- features[meanstd,2]
+meanstd.names = gsub('-mean', 'Mean', meanstd.names)
+meanstd.names = gsub('-std', 'Std', meanstd.names)
+meanstd.names <- gsub('[-()]', '', meanstd.names)
+
+train <- read.table("./data/UCI HAR Dataset/train/X_train.txt")[meanstd]
+train_activities <- read.table("./data/UCI HAR Dataset/train/Y_train.txt")
+train_subjects <- read.table("./data/UCI HAR Dataset/train/subject_train.txt")
+train <- cbind(train_subjects, train_activities, train)
+
+test <- read.table("./data/UCI HAR Dataset/test/X_test.txt")[meanstd]
+test_activities <- read.table("./data/UCI HAR Dataset/test/Y_test.txt")
+test_subjects <- read.table("./data/UCI HAR Dataset/test/subject_test.txt")
+test <- cbind(test_subjects, test_activities, test)
+
+data <- rbind(train, test)
+colnames(data) <- c("subject", "activity", meanstd.names)
+
+data$activity <- factor(data$activity, levels = activity[,1], labels = activity[,2])
+data$subject <- as.factor(data$subject)
+
+library(reshape2)
+data.melted <- melt(data, id = c("subject", "activity"))
+data.mean <- dcast(data.melted, subject + activity ~ variable, mean)
+final<-melt(data.mean,id=c("subject", "activity"))
+kable(final[1:10,],caption = "Molten final results")
+```
