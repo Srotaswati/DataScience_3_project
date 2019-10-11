@@ -8,3 +8,5 @@
 6. Use rbind to add both the datasets into one final dataset
 7. Convert the activity and subject columns into factors
 8. Since the final dataset includes the same variable in multiple columns, it is melted and recast into a dataframe with mean summaries for each subject and activity
+
+The Codebook describing the features and summary results can be found [here](https://srotaswati.github.io/DataScience_3_project/Codebook.html)
